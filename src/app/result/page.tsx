@@ -8,6 +8,7 @@ import {
   getCurrentSubmission,
   clearCurrentSubmission,
   setPersonalization,
+  updateSubmission,
 } from "@/lib/storage";
 import { effectivePlacement } from "@/lib/submission";
 import { buildContext } from "@/lib/personalize";
@@ -286,6 +287,9 @@ export default function ResultPage() {
           )}
         </div>
 
+        {/* Purchase / email delivery */}
+        <PurchaseCard sub={sub} person={person} />
+
         {/* Actions */}
         <div className="paper mt-3">
           <div className="btn-row">
@@ -391,6 +395,125 @@ function AiBadge({
     );
   }
   return null;
+}
+
+function PurchaseCard({
+  sub,
+  person,
+}: {
+  sub: Submission;
+  person: Personalization | null;
+}) {
+  const [cfg, setCfg] = useState<{
+    stripeEnabled: boolean;
+    emailEnabled: boolean;
+    priceLabel: string;
+    productName: string;
+  } | null>(null);
+  const [email, setEmail] = useState(sub.order?.email ?? "");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const delivered = !!sub.order?.deliveredAt;
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then(setCfg)
+      .catch(() => setCfg(null));
+  }, []);
+
+  async function buy() {
+    setErr(null);
+    if (!/.+@.+\..+/.test(email)) {
+      setErr("Please enter a valid email address.");
+      return;
+    }
+    if (!person) {
+      setErr("Your report is still being written — one moment.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const context = buildContext(sub);
+      updateSubmission(sub.id, {
+        order: { ...(sub.order ?? {}), email },
+      });
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, context, personalization: person, orderId: sub.id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setErr(data.error || "Could not start checkout.");
+        setBusy(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setErr("Something went wrong starting checkout.");
+      setBusy(false);
+    }
+  }
+
+  if (delivered) {
+    return (
+      <div className="paper mt-3" style={{ borderLeft: "3px solid var(--gold)" }}>
+        <span className="overline">Official Student File</span>
+        <h3 style={{ margin: "0.4rem 0 0.2rem" }}>Delivered ✓</h3>
+        <p className="muted" style={{ marginBottom: 0 }}>
+          Your official Student File was emailed to{" "}
+          <strong>{sub.order?.email}</strong>
+          {sub.order?.channel === "simulated"
+            ? " (simulated — configure email to send for real)."
+            : "."}{" "}
+          Check your inbox for the PDF, your advisor prompt, and the Dean&apos;s
+          message.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="paper mt-3" style={{ borderLeft: "3px solid var(--stamp-red)" }}>
+      <span className="overline">Get Your Official Student File</span>
+      <h3 style={{ margin: "0.4rem 0 0.3rem" }}>
+        {cfg?.productName ?? "OAU Official Student File"}
+        {cfg ? ` — ${cfg.priceLabel}` : ""}
+      </h3>
+      <p className="muted field-note">
+        We&apos;ll email you a professionally typeset PDF of your complete file —
+        letter, transcript, course schedule, all six documents — plus your
+        private AI advisor prompt and a welcome from the Dean.
+      </p>
+      <div className="buy-row mt-2">
+        <input
+          className="field"
+          type="email"
+          inputMode="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button className="btn btn-gold" type="button" onClick={buy} disabled={busy}>
+          {busy
+            ? "Starting…"
+            : cfg?.stripeEnabled
+              ? `Buy & Email — ${cfg.priceLabel}`
+              : "Get my file (test mode)"}
+        </button>
+      </div>
+      {err ? <p className="error-text">{err}</p> : null}
+      <p className="tiny muted mt-2">
+        {cfg?.stripeEnabled
+          ? "Secure checkout via Stripe."
+          : "Payments not yet configured — this runs the delivery flow in test mode."}
+        {cfg && !cfg.emailEnabled
+          ? " Email provider not configured, so delivery is simulated."
+          : ""}
+      </p>
+    </div>
+  );
 }
 
 function CopyBox({ text }: { text: string }) {

@@ -11,7 +11,7 @@ import {
   setPersonalization,
 } from "@/lib/storage";
 import { effectivePlacement } from "@/lib/submission";
-import { buildContext } from "@/lib/personalize";
+import { buildContext, buildFallback } from "@/lib/personalize";
 import { STUDENT_TYPES, STUDENT_TYPE_BY_ID } from "@/data/studentTypes";
 import { MAJOR_BY_ID } from "@/data/majors";
 import { MINOR_BY_ID } from "@/data/minors";
@@ -44,9 +44,9 @@ export default function AdminPage() {
 
   function exportCsv() {
     const header = [
-      "id", "name", "age", "student_type", "major", "minor",
+      "id", "name", "age", "email", "student_type", "major", "minor",
       "required_course", "elective_1", "elective_2", "elective_3",
-      "audio", "created_at", "overridden",
+      "audio", "created_at", "overridden", "purchased", "delivered_at",
     ];
     const rows = subs.map((s) => {
       const p = effectivePlacement(s);
@@ -55,6 +55,7 @@ export default function AdminPage() {
         s.id,
         s.name,
         (s.answers["q01b_age"] as string) ?? "",
+        s.order?.email ?? "",
         STUDENT_TYPE_BY_ID[p.studentTypeId]?.name ?? "",
         MAJOR_BY_ID[p.majorId]?.name ?? "",
         MINOR_BY_ID[p.minorId]?.name ?? "",
@@ -63,6 +64,8 @@ export default function AdminPage() {
         p.audioLessonId,
         s.createdAt,
         s.overrides ? "yes" : "no",
+        s.order?.purchased ? "yes" : "no",
+        s.order?.deliveredAt ?? "",
       ];
     });
     const csv = [header, ...rows]
@@ -91,6 +94,10 @@ export default function AdminPage() {
               <h2 style={{ margin: "0.3rem 0 0", fontSize: "1.5rem" }}>
                 {subs.length} record{subs.length === 1 ? "" : "s"} on this device
               </h2>
+              <p className="tiny muted" style={{ margin: "0.2rem 0 0" }}>
+                {subs.filter((s) => s.order?.purchased).length} purchased ·{" "}
+                {subs.filter((s) => s.order?.deliveredAt).length} delivered
+              </p>
             </div>
             {subs.length > 0 ? (
               <div className="btn-row">
@@ -185,7 +192,7 @@ function RecordEditor({
   const [typeId, setTypeId] = useState(p.studentTypeId);
   const [reqId, setReqId] = useState(p.requiredCourseId);
   const [els, setEls] = useState<string[]>(p.electiveIds);
-  const [busy, setBusy] = useState<null | "save" | "regen">(null);
+  const [busy, setBusy] = useState<null | "save" | "regen" | "resend">(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   const dirty =
@@ -243,6 +250,45 @@ function RecordEditor({
     }
   }
 
+  async function resendEmail() {
+    const latest = getLatest(sub.id) ?? sub;
+    let email = latest.order?.email;
+    if (!email) {
+      email = window.prompt("Send the Student File to which email?") ?? "";
+      if (!email) return;
+    }
+    setBusy("resend");
+    setMsg(null);
+    try {
+      const context = buildContext(latest);
+      const personalization = latest.personalization ?? buildFallback(context);
+      const res = await fetch("/api/resend", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, context, personalization }),
+      });
+      const d = await res.json();
+      if (!res.ok || d.error) {
+        setMsg(d.error || "Could not send.");
+      } else {
+        updateSubmission(sub.id, {
+          order: {
+            ...(latest.order ?? {}),
+            email,
+            purchased: true,
+            deliveredAt: new Date().toISOString(),
+          },
+        });
+        setMsg(d.simulated ? `Simulated send to ${email}.` : `Emailed to ${email}.`);
+        onChange();
+      }
+    } catch {
+      setMsg("Could not send.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   function setElective(i: number, value: string) {
     setEls((cur) => cur.map((v, idx) => (idx === i ? value : v)));
   }
@@ -258,6 +304,14 @@ function RecordEditor({
           <b>Filed:</b> {new Date(sub.createdAt).toLocaleString()} &nbsp;|&nbsp;
           <b> Major:</b> {MAJOR_BY_ID[p.majorId]?.name} &nbsp;|&nbsp;
           <b> Minor:</b> {MINOR_BY_ID[p.minorId]?.name}
+        </p>
+        <p className="kv">
+          <b>Email:</b> {sub.order?.email || "—"} &nbsp;|&nbsp;
+          <b> Purchased:</b> {sub.order?.purchased ? "yes" : "no"} &nbsp;|&nbsp;
+          <b> Delivered:</b>{" "}
+          {sub.order?.deliveredAt
+            ? new Date(sub.order.deliveredAt).toLocaleString()
+            : "—"}
         </p>
 
         <div className="edit-grid mt-2">
@@ -319,6 +373,15 @@ function RecordEditor({
               Reset to engine
             </button>
           ) : null}
+          <button
+            className="btn btn-ghost"
+            type="button"
+            style={{ minHeight: "40px", padding: "0.5rem 1rem" }}
+            disabled={busy !== null}
+            onClick={resendEmail}
+          >
+            {busy === "resend" ? "Sending…" : "Resend email"}
+          </button>
         </div>
         {msg ? <p className="tiny muted mt-2">{msg}</p> : null}
       </div>

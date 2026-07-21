@@ -215,6 +215,18 @@ export interface Personalization {
   questionToConsider: string;
 }
 
+/** Purchase / delivery record for a submission (Phase 2B). */
+export interface OrderInfo {
+  email?: string;
+  /** Stripe Checkout session id (or "simulated:*" in test mode). */
+  sessionId?: string;
+  purchased?: boolean;
+  /** ISO timestamp of the last successful email delivery. */
+  deliveredAt?: string;
+  /** How fulfillment happened. */
+  channel?: "stripe" | "simulated";
+}
+
 /** A stored submission (localStorage record). */
 export interface Submission {
   id: string;
@@ -237,4 +249,6 @@ export interface Submission {
       | "assignmentId"
     >
   >;
+  /** Purchase / email-delivery state (Phase 2B). */
+  order?: OrderInfo;
 }

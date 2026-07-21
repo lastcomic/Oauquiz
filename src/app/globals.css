@@ -889,3 +889,21 @@ details.record summary {
   outline-offset: 1px;
   border-color: var(--navy);
 }
+
+/* ── Purchase row ──────────────────────────────────────────── */
+
+.buy-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.buy-row .field {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.buy-row .btn {
+  flex: 0 0 auto;
+}

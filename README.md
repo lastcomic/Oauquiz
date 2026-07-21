@@ -79,6 +79,43 @@ memberships, subscriptions, chatbot. Local mock data + `localStorage` only.
 
 ---
 
+## Phase 2 — Curriculum Engine, AI, PDF, Payments, Email
+
+Phase 2A (curriculum engine + AI report + PDF + admin) and Phase 2B (Stripe
+checkout + email delivery) are built. Everything **degrades gracefully**: with
+no keys the app runs in simulation/template mode and still deploys; adding keys
+activates the real integrations — no code changes.
+
+### Environment variables (set in Vercel → Settings → Environment Variables)
+
+| Variable | Enables | Notes |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | Live AI-written letters | Falls back to hand-written templates when absent. |
+| `AI_MODEL` | Override AI model | Default `claude-sonnet-5`. |
+| `STRIPE_SECRET_KEY` | Real Stripe Checkout | Absent → simulation ("test mode") checkout. |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook fulfillment | For `/api/stripe/webhook`. |
+| `STRIPE_PRICE_ID` | Fixed Stripe price | Otherwise uses `PRICE_AMOUNT_CENTS`. |
+| `PRICE_AMOUNT_CENTS` / `PRICE_CURRENCY` / `PRODUCT_NAME` | Inline price | Defaults `2900` / `usd` / "OAU Official Student File". |
+| `RESEND_API_KEY` / `EMAIL_FROM` | Real email delivery (PDF attached) | Absent → email is simulated (logged, not sent). |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Durable order store (Upstash/Vercel KV) | Optional; a client-driven fallback delivers without it. |
+| `NEXT_PUBLIC_BASE_URL` | Stripe redirect origin | Optional; defaults to the request origin. |
+
+### Phase 2 data + logic files
+| File | Controls |
+| --- | --- |
+| `src/data/courses.ts` | Full course catalog + metadata (required + electives) |
+| `src/data/audioLessons.ts` · `assignments.ts` | Audio lessons · seven-day assignments |
+| `src/lib/scoring.ts` | Deterministic recommendation engine |
+| `src/lib/personalize.ts` | AI prompt + six-document template fallback |
+| `src/app/api/personalize` | AI letters (Anthropic + fallback) |
+| `src/app/api/checkout` · `deliver` · `stripe/webhook` · `resend` · `config` | Payments + email delivery |
+| `src/lib/pdf.ts` | Server-side Student File PDF (pdf-lib) |
+
+Deferred: a shared database for cross-device admin (the dashboard is per-device
+until then).
+
+---
+
 ## Run it
 
 ```bash
