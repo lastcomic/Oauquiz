@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   config,
+  aiEnabled,
   stripeEnabled,
   emailEnabled,
   beehiivEnabled,
@@ -16,6 +17,7 @@ export async function GET() {
   return NextResponse.json({
     leadMode: !chargingEnabled(),
     charging: chargingEnabled(),
+    aiEnabled: aiEnabled(),
     stripeEnabled: stripeEnabled(),
     emailEnabled: emailEnabled(),
     beehiivEnabled: beehiivEnabled(),

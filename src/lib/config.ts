@@ -4,6 +4,9 @@
 // the app still deploys. Add the real keys in Vercel env to activate.
 
 export const config = {
+  // AI
+  anthropicKey: process.env.ANTHROPIC_API_KEY || "",
+
   // Stripe
   stripeSecret: process.env.STRIPE_SECRET_KEY || "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
@@ -40,6 +43,7 @@ export const config = {
   baseUrl: process.env.NEXT_PUBLIC_BASE_URL || "",
 } as const;
 
+export const aiEnabled = () => !!config.anthropicKey;
 export const stripeEnabled = () => !!config.stripeSecret;
 export const emailEnabled = () => !!config.resendKey;
 export const kvEnabled = () => !!config.kvUrl && !!config.kvToken;
