@@ -1,0 +1,715 @@
+/* ─────────────────────────────────────────────────────────────
+   OLD AGE UNIVERSITY — design system
+   Vintage academic. Serif type, registrar stamps, cream paper,
+   deep navy, muted gold, stamp red. Mobile-first, lots of air.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --navy: #1b2a47;
+  --gold: #c9a961;
+  --cream: #e8dcc4;
+  --stamp-red: #a63d2a;
+  --charcoal: #2c2620;
+
+  --cream-deep: #ddceb0;
+  --cream-paper: #f2ead8;
+  --navy-soft: #24365a;
+  --ink: var(--charcoal);
+  --line: rgba(44, 38, 32, 0.18);
+  --line-strong: rgba(44, 38, 32, 0.4);
+
+  --serif: "Iowan Old Style", "Palatino Linotype", "Palatino", "Book Antiqua",
+    Georgia, "Times New Roman", serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+
+  --maxw: 44rem;
+  --radius: 3px;
+  --shadow: 0 1px 2px rgba(27, 42, 71, 0.08), 0 8px 28px rgba(27, 42, 71, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: var(--serif);
+  color: var(--ink);
+  background-color: var(--cream);
+  /* Subtle paper texture via layered gradients, no external assets. */
+  background-image:
+    radial-gradient(rgba(44, 38, 32, 0.035) 1px, transparent 1px),
+    radial-gradient(rgba(44, 38, 32, 0.025) 1px, transparent 1px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--navy);
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 0 0 0.5em;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 1.1rem 3rem;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+
+.center {
+  text-align: center;
+}
+
+.muted {
+  color: rgba(44, 38, 32, 0.68);
+}
+
+.tiny {
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+}
+
+.overline {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--stamp-red);
+}
+
+.serif-display {
+  font-size: clamp(1.9rem, 7vw, 3rem);
+  letter-spacing: 0.01em;
+}
+
+/* ── Crest / masthead ─────────────────────────────────────── */
+
+.crest {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.9rem 1.4rem;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: rgba(242, 234, 216, 0.6);
+}
+
+.crest-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.02em;
+  font-size: 0.95rem;
+}
+
+.est {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.6rem;
+  color: rgba(44, 38, 32, 0.6);
+}
+
+/* ── Paper card ───────────────────────────────────────────── */
+
+.paper {
+  background: var(--cream-paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.35rem;
+}
+
+@media (min-width: 640px) {
+  .paper {
+    padding: 2.25rem 2.5rem;
+  }
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: 1.4rem 0;
+}
+
+.rule-double {
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  height: 4px;
+  margin: 1.4rem 0;
+}
+
+/* ── Stamp ────────────────────────────────────────────────── */
+
+.stamp {
+  display: inline-block;
+  transform: rotate(-7deg);
+  border: 2.5px solid var(--stamp-red);
+  color: var(--stamp-red);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  opacity: 0.9;
+  box-shadow: inset 0 0 0 1px rgba(166, 61, 42, 0.35);
+}
+
+.stamp-round {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 2.5px solid var(--stamp-red);
+  color: var(--stamp-red);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  transform: rotate(-9deg);
+  font-family: var(--sans);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.56rem;
+  line-height: 1.25;
+  padding: 0.4rem;
+  opacity: 0.9;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 0.95rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--navy);
+  background: var(--navy);
+  color: var(--cream);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+  min-height: 48px;
+}
+
+.btn:hover {
+  background: var(--navy-soft);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--navy);
+}
+
+.btn-ghost:hover {
+  background: rgba(27, 42, 71, 0.06);
+}
+
+.btn-gold {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--charcoal);
+}
+
+.btn-gold:hover {
+  background: #d4b672;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* ── Forms ────────────────────────────────────────────────── */
+
+label.q-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  font-size: 1rem;
+}
+
+label.q-choice:hover {
+  border-color: var(--line-strong);
+}
+
+label.q-choice.selected {
+  border-color: var(--navy);
+  background: rgba(27, 42, 71, 0.06);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.q-choice input {
+  margin-top: 0.28rem;
+  accent-color: var(--navy);
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+}
+
+.q-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+textarea.field,
+input.field {
+  width: 100%;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+  padding: 0.8rem 0.9rem;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.55);
+  resize: vertical;
+}
+
+textarea.field:focus,
+input.field:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  border-color: var(--navy);
+}
+
+/* ── Progress ─────────────────────────────────────────────── */
+
+.progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+  font-family: var(--sans);
+}
+
+.progress-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(44, 38, 32, 0.12);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #b7955180);
+  transition: width 0.3s ease;
+}
+
+.progress-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(44, 38, 32, 0.7);
+  white-space: nowrap;
+}
+
+/* ── Info grid / result blocks ────────────────────────────── */
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px dotted var(--line-strong);
+}
+
+.field-row:last-child {
+  border-bottom: 0;
+}
+
+.field-key {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  color: var(--stamp-red);
+  font-weight: 700;
+}
+
+.field-val {
+  font-size: 1.15rem;
+  color: var(--navy);
+}
+
+.field-note {
+  font-size: 0.92rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  color: var(--navy);
+  background: rgba(201, 169, 97, 0.14);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mini-card {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.mini-card h4 {
+  margin: 0 0 0.25rem;
+  color: var(--navy);
+  font-size: 1.02rem;
+}
+
+.mini-card p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.assignment-day {
+  padding: 0.55rem 0;
+  border-bottom: 1px dotted var(--line);
+  font-size: 0.98rem;
+}
+
+.assignment-day:last-child {
+  border-bottom: 0;
+}
+
+/* ── "Coming later" placeholder block ─────────────────────── */
+
+.coming-later {
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  background: rgba(27, 42, 71, 0.035);
+}
+
+.placeholder-tag {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stamp-red);
+  border: 1px solid var(--stamp-red);
+  border-radius: 99px;
+  padding: 0.12rem 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Score meters (admin / result) ────────────────────────── */
+
+.meter {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr 2rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  margin-bottom: 0.4rem;
+}
+
+.meter-track {
+  height: 7px;
+  background: rgba(44, 38, 32, 0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--navy);
+  border-radius: 99px;
+}
+
+.meter-num {
+  text-align: right;
+  color: rgba(44, 38, 32, 0.7);
+}
+
+/* ── Footer / nav ─────────────────────────────────────────── */
+
+.footer {
+  margin-top: 2.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(44, 38, 32, 0.55);
+  font-family: var(--sans);
+  letter-spacing: 0.04em;
+}
+
+.backlink {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Admin table ──────────────────────────────────────────── */
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+table.records {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 520px;
+}
+
+table.records th,
+table.records td {
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+table.records th {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.64rem;
+  color: var(--stamp-red);
+  background: rgba(201, 169, 97, 0.12);
+}
+
+table.records tr:last-child td {
+  border-bottom: 0;
+}
+
+details.record {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+details.record summary {
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  padding: 0.35rem 0;
+}
+
+.kv {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  margin: 0.2rem 0;
+}
+
+.kv b {
+  color: var(--navy);
+}
+
+/* ── Letter (printable) ───────────────────────────────────── */
+
+.letter-sheet {
+  background: var(--cream-paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 2rem 1.5rem;
+  position: relative;
+}
+
+@media (min-width: 640px) {
+  .letter-sheet {
+    padding: 3.25rem 3rem;
+  }
+}
+
+.letter-head {
+  text-align: center;
+  border-bottom: 2px solid var(--line-strong);
+  padding-bottom: 1.1rem;
+  margin-bottom: 1.6rem;
+}
+
+.sign-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.seal {
+  flex: none;
+}
+
+.letter-body p {
+  margin: 0 0 1.15rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.letter-salutation {
+  margin-bottom: 1.15rem;
+}
+
+.letter-sign {
+  margin-top: 2rem;
+}
+
+.signature {
+  font-size: 1.6rem;
+  color: var(--navy);
+  font-style: italic;
+  margin: 0.2rem 0;
+}
+
+.watermark {
+  position: absolute;
+  right: 1.25rem;
+  top: 1.25rem;
+}
+
+.print-only {
+  display: none;
+}
+
+/* ── Print ────────────────────────────────────────────────── */
+
+@media print {
+  :root {
+    --cream: #ffffff;
+    --cream-paper: #ffffff;
+  }
+  body {
+    background: #fff;
+    background-image: none;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  .page {
+    padding: 0;
+  }
+  .letter-sheet {
+    border: none;
+    box-shadow: none;
+    padding: 0.5in;
+    max-width: 100%;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+/* ── Small utilities ──────────────────────────────────────── */
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.75rem; }
+.mb-2 { margin-bottom: 1rem; }
+.gap-sm { gap: 0.5rem; }
+
+.error-text {
+  color: var(--stamp-red);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
