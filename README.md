@@ -100,7 +100,8 @@ activates the real integrations — no code changes.
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook fulfillment | For `/api/stripe/webhook`. |
 | `STRIPE_PRICE_ID` | Fixed Stripe price | Otherwise uses `PRICE_AMOUNT_CENTS`. |
 | `PRICE_AMOUNT_CENTS` / `PRICE_CURRENCY` / `PRODUCT_NAME` | Inline price | Defaults `2900` / `usd` / "OAU Official Student File". |
-| `RESEND_API_KEY` / `EMAIL_FROM` | Real email delivery (PDF attached) | Absent → email is simulated (logged, not sent). |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` | Real email delivery via your own mailbox (PDF attached) | Preferred when set. `SMTP_SECURE=true` for port 465, else STARTTLS on 587. |
+| `RESEND_API_KEY` / `EMAIL_FROM` | Alternative email delivery (PDF attached) | Used if SMTP isn't set. Absent (and no SMTP) → email is simulated. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Durable order store (Upstash/Vercel KV) | Optional; a client-driven fallback delivers without it. |
 | `NEXT_PUBLIC_BASE_URL` | Stripe redirect origin | Optional; defaults to the request origin. |
 

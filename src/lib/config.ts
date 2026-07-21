@@ -15,10 +15,16 @@ export const config = {
   priceCurrency: (process.env.PRICE_CURRENCY || "usd").toLowerCase(),
   productName: process.env.PRODUCT_NAME || "OAU Official Student File",
 
-  // Email (Resend)
+  // Email — Resend OR SMTP (whichever is configured; SMTP takes priority)
   resendKey: process.env.RESEND_API_KEY || "",
   emailFrom:
     process.env.EMAIL_FROM || "OAU Office of Guidance <onboarding@resend.dev>",
+  smtpHost: process.env.SMTP_HOST || "",
+  smtpPort: Number(process.env.SMTP_PORT || "587"),
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+  // "true" for port 465 (implicit TLS); otherwise STARTTLS on 587
+  smtpSecure: process.env.SMTP_SECURE === "true",
 
   // Optional KV (Upstash / Vercel KV REST)
   kvUrl: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "",
@@ -45,7 +51,10 @@ export const config = {
 
 export const aiEnabled = () => !!config.anthropicKey;
 export const stripeEnabled = () => !!config.stripeSecret;
-export const emailEnabled = () => !!config.resendKey;
+export const smtpEnabled = () =>
+  !!config.smtpHost && !!config.smtpUser && !!config.smtpPass;
+export const resendEnabled = () => !!config.resendKey;
+export const emailEnabled = () => smtpEnabled() || resendEnabled();
 export const kvEnabled = () => !!config.kvUrl && !!config.kvToken;
 export const beehiivEnabled = () =>
   !!config.beehiivKey && !!config.beehiivPublicationId;
