@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Crest from "@/components/Crest";
-import { QUESTIONS, NAME_QUESTION_ID } from "@/data/questions";
+import { QUESTIONS, NAME_QUESTION_ID, AGE_QUESTION_ID } from "@/data/questions";
 import type { AnswerMap, Question } from "@/lib/types";
 import { computePlacement, extractName } from "@/lib/scoring";
 import { saveSubmission, makeId } from "@/lib/storage";
@@ -216,14 +216,16 @@ function OpenInput({
   onChange: (v: string) => void;
 }) {
   const isName = question.id === NAME_QUESTION_ID;
-  if (isName) {
+  const isAge = question.id === AGE_QUESTION_ID;
+  if (isName || isAge) {
     return (
       <input
         className="field"
-        type="text"
+        type={isAge ? "number" : "text"}
+        inputMode={isAge ? "numeric" : "text"}
         value={value}
         placeholder={question.placeholder}
-        maxLength={80}
+        maxLength={isAge ? 3 : 80}
         onChange={(e) => onChange(e.target.value)}
         autoFocus
       />

@@ -1,15 +1,15 @@
 import type { Major } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────
-// MAJORS — the primary recommendation.
-// `categories` are listed most-important first; the scorer picks
-// the major whose leading categories best match the student's
-// top categories. Add or edit freely.
+// MAJORS — approved list. `categories` most-important first.
+// The engine picks the major whose leading categories best match
+// the student's top categories. Codes are cosmetic/editable.
 // ─────────────────────────────────────────────────────────────
 
 export const MAJORS: Major[] = [
   {
     id: "studio_practice",
+    code: "MAJ-CR",
     name: "Studio Practice",
     categories: ["creativity", "restoration", "learning"],
     description:
@@ -17,6 +17,7 @@ export const MAJORS: Major[] = [
   },
   {
     id: "applied_purpose",
+    code: "MAJ-PU",
     name: "Applied Purpose",
     categories: ["purpose", "community", "practical"],
     description:
@@ -24,6 +25,7 @@ export const MAJORS: Major[] = [
   },
   {
     id: "field_studies",
+    code: "MAJ-AD",
     name: "Field Studies",
     categories: ["adventure", "learning", "restoration"],
     description:
@@ -31,6 +33,7 @@ export const MAJORS: Major[] = [
   },
   {
     id: "civic_hospitality",
+    code: "MAJ-CO",
     name: "Civic & Hospitality",
     categories: ["community", "purpose", "restoration"],
     description:
@@ -38,6 +41,7 @@ export const MAJORS: Major[] = [
   },
   {
     id: "practical_trades",
+    code: "MAJ-PR",
     name: "Practical Trades & Repair",
     categories: ["practical", "income", "creativity"],
     description:
@@ -45,6 +49,7 @@ export const MAJORS: Major[] = [
   },
   {
     id: "second_income",
+    code: "MAJ-IN",
     name: "Second-Half Enterprise",
     categories: ["income", "practical", "purpose"],
     description:
@@ -52,6 +57,7 @@ export const MAJORS: Major[] = [
   },
   {
     id: "restorative_studies",
+    code: "MAJ-RE",
     name: "Restorative Studies",
     categories: ["restoration", "learning", "purpose"],
     description:

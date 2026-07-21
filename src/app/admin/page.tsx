@@ -1,63 +1,112 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Crest from "@/components/Crest";
-import type { Submission } from "@/lib/types";
-import { getAllSubmissions, clearAllSubmissions } from "@/lib/storage";
-import { STUDENT_TYPE_BY_ID } from "@/data/studentTypes";
+import type { Personalization, Submission } from "@/lib/types";
+import {
+  getAllSubmissions,
+  clearAllSubmissions,
+  updateSubmission,
+  setPersonalization,
+} from "@/lib/storage";
+import { effectivePlacement } from "@/lib/submission";
+import { buildContext } from "@/lib/personalize";
+import { STUDENT_TYPES, STUDENT_TYPE_BY_ID } from "@/data/studentTypes";
 import { MAJOR_BY_ID } from "@/data/majors";
 import { MINOR_BY_ID } from "@/data/minors";
-import { ELECTIVE_BY_ID } from "@/data/electives";
-import { CATEGORY_BY_ID, CATEGORY_IDS } from "@/data/categories";
-import { QUESTIONS } from "@/data/questions";
-import type { CategoryScores } from "@/lib/types";
+import {
+  COURSE_BY_ID,
+  REQUIRED_COURSES,
+  ELECTIVE_COURSES,
+} from "@/data/courses";
 
 export default function AdminPage() {
   const [subs, setSubs] = useState<Submission[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
+  function refresh() {
     setSubs(getAllSubmissions());
+  }
+  useEffect(() => {
+    refresh();
     setLoaded(true);
   }, []);
 
+  const stats = useMemo(() => computeStats(subs), [subs]);
+
   function clearAll() {
-    if (
-      window.confirm(
-        "Permanently delete all locally stored submissions on this device?",
-      )
-    ) {
+    if (window.confirm("Permanently delete all locally stored submissions on this device?")) {
       clearAllSubmissions();
-      setSubs([]);
+      refresh();
     }
+  }
+
+  function exportCsv() {
+    const header = [
+      "id", "name", "age", "student_type", "major", "minor",
+      "required_course", "elective_1", "elective_2", "elective_3",
+      "audio", "created_at", "overridden",
+    ];
+    const rows = subs.map((s) => {
+      const p = effectivePlacement(s);
+      const els = p.electiveIds.map((id) => COURSE_BY_ID[id]?.courseNumber ?? id);
+      return [
+        s.id,
+        s.name,
+        (s.answers["q01b_age"] as string) ?? "",
+        STUDENT_TYPE_BY_ID[p.studentTypeId]?.name ?? "",
+        MAJOR_BY_ID[p.majorId]?.name ?? "",
+        MINOR_BY_ID[p.minorId]?.name ?? "",
+        COURSE_BY_ID[p.requiredCourseId]?.courseNumber ?? "",
+        els[0] ?? "", els[1] ?? "", els[2] ?? "",
+        p.audioLessonId,
+        s.createdAt,
+        s.overrides ? "yes" : "no",
+      ];
+    });
+    const csv = [header, ...rows]
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "oau-submissions.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   return (
     <main className="page">
       <div className="wrap">
-        <Crest subtitle="Registrar · Local Records Office" />
+        <Crest subtitle="Registrar · Local Records & Dashboard" />
 
         <div className="paper mt-3">
-          <div
-            className="btn-row"
-            style={{ justifyContent: "space-between", alignItems: "center" }}
-          >
+          <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <span className="overline">Submitted Placement Exams</span>
+              <span className="overline">Admin Dashboard</span>
               <h2 style={{ margin: "0.3rem 0 0", fontSize: "1.5rem" }}>
                 {subs.length} record{subs.length === 1 ? "" : "s"} on this device
               </h2>
             </div>
             {subs.length > 0 ? (
-              <button className="btn btn-ghost" type="button" onClick={clearAll}>
-                Clear all records
-              </button>
+              <div className="btn-row">
+                <button className="btn btn-ghost" type="button" onClick={exportCsv}>
+                  Export CSV
+                </button>
+                <button className="btn btn-ghost" type="button" onClick={clearAll}>
+                  Clear all
+                </button>
+              </div>
             ) : null}
           </div>
           <p className="tiny muted mt-2">
-            Everything here is read from <code>localStorage</code>. No server, no
-            network. Clearing your browser data clears this office.
+            Records, edits, and regenerated letters are stored in this browser&apos;s
+            <code> localStorage</code> — this dashboard is per-device (a shared
+            database arrives with Phase 2B).
           </p>
         </div>
 
@@ -65,57 +114,32 @@ export default function AdminPage() {
           <p className="muted mt-3">Opening the filing cabinet…</p>
         ) : subs.length === 0 ? (
           <div className="paper mt-3 center">
-            <p className="muted">
-              No submissions yet. Complete the exam and it will be filed here.
-            </p>
-            <Link href="/quiz" className="btn mt-2">
-              Take the Placement Exam →
-            </Link>
+            <p className="muted">No submissions yet.</p>
+            <Link href="/quiz" className="btn mt-2">Take the Placement Exam →</Link>
           </div>
         ) : (
           <>
-            {/* Summary table */}
+            {/* Statistics */}
             <div className="paper mt-3">
-              <span className="overline">Summary</span>
-              <div className="table-scroll mt-2">
-                <table className="records">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Major</th>
-                      <th>Minor</th>
-                      <th>Filed</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subs.map((s, i) => (
-                      <tr key={s.id}>
-                        <td>{subs.length - i}</td>
-                        <td>{s.name}</td>
-                        <td>
-                          {STUDENT_TYPE_BY_ID[s.placement.studentTypeId]?.name ??
-                            "—"}
-                        </td>
-                        <td>{MAJOR_BY_ID[s.placement.majorId]?.name ?? "—"}</td>
-                        <td>{MINOR_BY_ID[s.placement.minorId]?.name ?? "—"}</td>
-                        <td className="tiny">
-                          {new Date(s.createdAt).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <span className="overline">Quiz Statistics</span>
+              <div className="stats-grid mt-2">
+                <StatList title="Most common student types" rows={stats.types} />
+                <StatList title="Most assigned electives" rows={stats.electives} />
+                <StatList title="Most assigned majors" rows={stats.majors} />
               </div>
             </div>
 
-            {/* Full detail per submission */}
+            {/* Records */}
             <div className="paper mt-3">
-              <span className="overline">Full Answer Records</span>
+              <span className="overline">Records · Edit &amp; Regenerate</span>
               <div className="mt-2">
                 {subs.map((s, i) => (
-                  <RecordDetail key={s.id} sub={s} index={subs.length - i} />
+                  <RecordEditor
+                    key={s.id}
+                    sub={s}
+                    index={subs.length - i}
+                    onChange={refresh}
+                  />
                 ))}
               </div>
             </div>
@@ -123,96 +147,206 @@ export default function AdminPage() {
         )}
 
         <p className="footer">
-          <Link href="/">Office lobby</Link> ·{" "}
-          <Link href="/result">Latest placement</Link>
+          <Link href="/">Office lobby</Link> · <Link href="/result">Latest placement</Link>
         </p>
       </div>
     </main>
   );
 }
 
-function RecordDetail({ sub, index }: { sub: Submission; index: number }) {
-  const type = STUDENT_TYPE_BY_ID[sub.placement.studentTypeId];
-  const major = MAJOR_BY_ID[sub.placement.majorId];
-  const minor = MINOR_BY_ID[sub.placement.minorId];
+function StatList({ title, rows }: { title: string; rows: [string, number][] }) {
+  return (
+    <div>
+      <p className="field-key" style={{ marginBottom: "0.4rem" }}>{title}</p>
+      {rows.length === 0 ? (
+        <p className="tiny muted">—</p>
+      ) : (
+        rows.map(([label, n]) => (
+          <div key={label} className="transcript-line">
+            <span className="tiny">{label}</span>
+            <strong className="tiny">{n}</strong>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+function RecordEditor({
+  sub,
+  index,
+  onChange,
+}: {
+  sub: Submission;
+  index: number;
+  onChange: () => void;
+}) {
+  const p = effectivePlacement(sub);
+  const [typeId, setTypeId] = useState(p.studentTypeId);
+  const [reqId, setReqId] = useState(p.requiredCourseId);
+  const [els, setEls] = useState<string[]>(p.electiveIds);
+  const [busy, setBusy] = useState<null | "save" | "regen">(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const dirty =
+    typeId !== p.studentTypeId ||
+    reqId !== p.requiredCourseId ||
+    els.join() !== p.electiveIds.join();
+
+  function saveOverrides() {
+    const req = COURSE_BY_ID[reqId];
+    updateSubmission(sub.id, {
+      overrides: {
+        studentTypeId: typeId,
+        requiredCourseId: reqId,
+        electiveIds: els,
+        // keep audio + assignment consistent with the (possibly new) required course
+        audioLessonId: req?.relatedAudioLesson ?? p.audioLessonId,
+        assignmentId: req?.firstAssignment ?? p.assignmentId,
+      },
+      personalization: undefined, // invalidate cached letter; regenerate below
+    });
+    setMsg("Saved. Regenerate the report to refresh the letter.");
+    onChange();
+  }
+
+  function resetOverrides() {
+    updateSubmission(sub.id, { overrides: undefined, personalization: undefined });
+    setTypeId(sub.placement.studentTypeId);
+    setReqId(sub.placement.requiredCourseId);
+    setEls(sub.placement.electiveIds);
+    setMsg("Reset to the engine's original recommendation.");
+    onChange();
+  }
+
+  async function regenerate() {
+    setBusy("regen");
+    setMsg(null);
+    // Ensure current edits are persisted first so context reflects them.
+    if (dirty) saveOverrides();
+    const latest = getLatest(sub.id) ?? sub;
+    try {
+      const context = buildContext(latest);
+      const res = await fetch("/api/personalize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ context }),
+      });
+      const person = (await res.json()) as Personalization;
+      setPersonalization(sub.id, person);
+      setMsg(`Report regenerated (${person.source === "ai" ? "AI" : "template"}).`);
+      onChange();
+    } catch {
+      setMsg("Could not regenerate. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function setElective(i: number, value: string) {
+    setEls((cur) => cur.map((v, idx) => (idx === i ? value : v)));
+  }
 
   return (
     <details className="record">
       <summary>
-        #{index} · <strong>{sub.name}</strong> — {type?.name ?? "—"}
+        #{index} · <strong>{sub.name}</strong> — {STUDENT_TYPE_BY_ID[p.studentTypeId]?.name}
+        {sub.overrides ? " · (overridden)" : ""}
       </summary>
-      <div style={{ padding: "0.5rem 0.25rem" }}>
+      <div style={{ padding: "0.6rem 0.25rem" }}>
         <p className="kv">
-          <b>Type:</b> {type?.name} &nbsp;|&nbsp; <b>Major:</b> {major?.name}{" "}
-          &nbsp;|&nbsp; <b>Minor:</b> {minor?.name}
-        </p>
-        <p className="kv">
-          <b>Electives:</b>{" "}
-          {sub.placement.electiveIds
-            .map((id) => ELECTIVE_BY_ID[id]?.name ?? id)
-            .join(", ")}
+          <b>Filed:</b> {new Date(sub.createdAt).toLocaleString()} &nbsp;|&nbsp;
+          <b> Major:</b> {MAJOR_BY_ID[p.majorId]?.name} &nbsp;|&nbsp;
+          <b> Minor:</b> {MINOR_BY_ID[p.minorId]?.name}
         </p>
 
-        <hr className="rule" />
-        <p className="kv">
-          <b>Category scores</b>
-        </p>
-        <ScoreMeters scores={sub.placement.scores} />
+        <div className="edit-grid mt-2">
+          <label className="edit-field">
+            <span>Student type</span>
+            <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+              {STUDENT_TYPES.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="edit-field">
+            <span>Required course</span>
+            <select value={reqId} onChange={(e) => setReqId(e.target.value)}>
+              {REQUIRED_COURSES.map((c) => (
+                <option key={c.id} value={c.id}>{c.courseNumber} — {c.title}</option>
+              ))}
+            </select>
+          </label>
+          {els.map((elId, i) => (
+            <label key={i} className="edit-field">
+              <span>Elective {i + 1}</span>
+              <select value={elId} onChange={(e) => setElective(i, e.target.value)}>
+                {ELECTIVE_COURSES.map((c) => (
+                  <option key={c.id} value={c.id}>{c.courseNumber} — {c.title}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
 
-        <hr className="rule" />
-        <p className="kv">
-          <b>Answers</b>
-        </p>
-        {QUESTIONS.map((q) => {
-          const raw = sub.answers[q.id];
-          const display = formatAnswer(q.id, raw);
-          return (
-            <p key={q.id} className="kv" style={{ margin: "0.35rem 0" }}>
-              <span className="muted">{q.prompt}</span>
-              <br />
-              <b>{display || "—"}</b>
-            </p>
-          );
-        })}
+        <div className="btn-row mt-2">
+          <button
+            className="btn"
+            type="button"
+            style={{ minHeight: "40px", padding: "0.5rem 1rem" }}
+            disabled={!dirty || busy !== null}
+            onClick={saveOverrides}
+          >
+            Save overrides
+          </button>
+          <button
+            className="btn btn-gold"
+            type="button"
+            style={{ minHeight: "40px", padding: "0.5rem 1rem" }}
+            disabled={busy !== null}
+            onClick={regenerate}
+          >
+            {busy === "regen" ? "Regenerating…" : "Regenerate report"}
+          </button>
+          {sub.overrides ? (
+            <button
+              className="btn btn-ghost"
+              type="button"
+              style={{ minHeight: "40px", padding: "0.5rem 1rem" }}
+              disabled={busy !== null}
+              onClick={resetOverrides}
+            >
+              Reset to engine
+            </button>
+          ) : null}
+        </div>
+        {msg ? <p className="tiny muted mt-2">{msg}</p> : null}
       </div>
     </details>
   );
 }
 
-function ScoreMeters({ scores }: { scores: CategoryScores }) {
-  const max = Math.max(1, ...CATEGORY_IDS.map((id) => scores[id]));
-  return (
-    <div>
-      {CATEGORY_IDS.map((id) => {
-        const val = scores[id] ?? 0;
-        const pct = Math.round((val / max) * 100);
-        return (
-          <div key={id} className="meter">
-            <span>{CATEGORY_BY_ID[id].label}</span>
-            <div className="meter-track">
-              <div className="meter-fill" style={{ width: `${pct}%` }} />
-            </div>
-            <span className="meter-num">{val}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
+function getLatest(id: string): Submission | null {
+  return getAllSubmissions().find((s) => s.id === id) ?? null;
 }
 
-/** Human-readable answer for a stored value. */
-function formatAnswer(
-  qid: string,
-  raw: string | string[] | undefined,
-): string {
-  const q = QUESTIONS.find((x) => x.id === qid);
-  if (!q) return "";
-  if (raw === undefined) return "";
-  if (q.kind === "open") {
-    return Array.isArray(raw) ? raw.join(" ") : raw;
+function computeStats(subs: Submission[]) {
+  const typeCount = new Map<string, number>();
+  const electiveCount = new Map<string, number>();
+  const majorCount = new Map<string, number>();
+  for (const s of subs) {
+    const p = effectivePlacement(s);
+    inc(typeCount, STUDENT_TYPE_BY_ID[p.studentTypeId]?.name ?? p.studentTypeId);
+    inc(majorCount, MAJOR_BY_ID[p.majorId]?.name ?? p.majorId);
+    for (const id of p.electiveIds) {
+      inc(electiveCount, COURSE_BY_ID[id]?.title ?? id);
+    }
   }
-  const ids = Array.isArray(raw) ? raw : [raw];
-  return ids
-    .map((id) => q.choices?.find((c) => c.id === id)?.label ?? id)
-    .join("; ");
+  const top = (m: Map<string, number>): [string, number][] =>
+    Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  return { types: top(typeCount), electives: top(electiveCount), majors: top(majorCount) };
+}
+
+function inc(m: Map<string, number>, k: string) {
+  m.set(k, (m.get(k) ?? 0) + 1);
 }

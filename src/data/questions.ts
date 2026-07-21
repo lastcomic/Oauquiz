@@ -18,6 +18,7 @@ import type { Question } from "@/lib/types";
 // ─────────────────────────────────────────────────────────────
 
 export const NAME_QUESTION_ID = "q01_name";
+export const AGE_QUESTION_ID = "q01b_age";
 
 export const QUESTIONS: Question[] = [
   {
@@ -27,6 +28,14 @@ export const QUESTIONS: Question[] = [
     prompt: "Full name, as you'd like it to appear on your student file.",
     help: "Required. Nicknames accepted. Diplomas are non-binding.",
     placeholder: "e.g. Margaret \"Peg\" Ellison",
+  },
+  {
+    id: AGE_QUESTION_ID,
+    kind: "open",
+    section: "Enrollment",
+    prompt: "Age (optional).",
+    help: "Not scored, and never required. It only helps your counselor read the file.",
+    placeholder: "e.g. 54",
   },
   {
     id: "q02_more",

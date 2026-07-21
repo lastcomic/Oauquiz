@@ -2,26 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { Submission } from "@/lib/types";
+import type { Personalization, Submission } from "@/lib/types";
 import { getCurrentSubmission } from "@/lib/storage";
+import { effectivePlacement } from "@/lib/submission";
+import { buildContext, buildFallback } from "@/lib/personalize";
 import { STUDENT_TYPE_BY_ID } from "@/data/studentTypes";
 import { MAJOR_BY_ID } from "@/data/majors";
 import { MINOR_BY_ID } from "@/data/minors";
-import {
-  LETTER_BODIES,
-  HUMOROUS_OBSERVATIONS,
-  SEVEN_DAY_ASSIGNMENTS,
-  fillTemplate,
-  OFFICE_NAME,
-  UNIVERSITY_NAME,
-} from "@/data/letterTemplates";
+import { UNIVERSITY_NAME, OFFICE_NAME, MOTTO } from "@/data/brand";
 
 export default function LetterPage() {
   const [sub, setSub] = useState<Submission | null>(null);
+  const [person, setPerson] = useState<Personalization | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setSub(getCurrentSubmission());
+    const s = getCurrentSubmission();
+    setSub(s);
+    if (s) {
+      setPerson(s.personalization ?? buildFallback(buildContext(s)));
+    }
     setLoaded(true);
   }, []);
 
@@ -33,7 +33,7 @@ export default function LetterPage() {
     );
   }
 
-  if (!sub) {
+  if (!sub || !person) {
     return (
       <main className="page">
         <div className="wrap center">
@@ -49,22 +49,12 @@ export default function LetterPage() {
     );
   }
 
-  const { name, placement } = sub;
-  const type = STUDENT_TYPE_BY_ID[placement.studentTypeId];
-  const major = MAJOR_BY_ID[placement.majorId];
-  const minor = MINOR_BY_ID[placement.minorId];
-  const topCategory = placement.rankedCategories[0];
-
-  const tokens = {
-    name,
-    type: type.name,
-    major: major.name,
-    minor: minor.name,
-  };
-  const body = fillTemplate(LETTER_BODIES[type.id] ?? "", tokens);
-  const observation = HUMOROUS_OBSERVATIONS[topCategory];
-  const firstAssignment = SEVEN_DAY_ASSIGNMENTS[topCategory][0];
-
+  const p = effectivePlacement(sub);
+  const name = sub.name;
+  const type = STUDENT_TYPE_BY_ID[p.studentTypeId];
+  const major = MAJOR_BY_ID[p.majorId];
+  const minor = MINOR_BY_ID[p.minorId];
+  const L = person.guidanceLetter;
   const dateStr = new Date(sub.createdAt).toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",
@@ -100,36 +90,17 @@ export default function LetterPage() {
           </header>
 
           <div className="letter-body">
-            <p className="tiny muted" style={{ marginBottom: "1.4rem" }}>
+            <p className="tiny muted" style={{ marginBottom: "0.4rem" }}>
               {dateStr}
             </p>
-
-            <p className="letter-salutation">Dear {name},</p>
-
-            <p>
-              Following your recent examination, this Office is pleased to
-              confirm your placement as a <strong>{type.name}</strong>. The
-              designation is not a diagnosis. It is a recognition — of something
-              you have, in fact, known about yourself for a while.
+            <p className="overline" style={{ marginBottom: "1.2rem" }}>
+              Re: {L.subjectLine}
             </p>
 
-            <p>{body}</p>
-
-            <p>
-              <em>An observation from your file:</em> {observation}
-            </p>
-
-            <p>
-              <em>Your first assignment</em>, effective immediately and lasting
-              precisely seven days: {stripDay(firstAssignment)} The remaining six
-              days are printed on your placement page, should you need them.
-            </p>
-
-            <p>
-              You are not starting over. You are starting from the most informed
-              position of your life. We look forward to seeing what you do with
-              it.
-            </p>
+            <p>{L.opening}</p>
+            <p>{L.assessment}</p>
+            <p>{L.recommendation}</p>
+            <p>{L.closing}</p>
 
             <div className="letter-sign">
               <div className="sign-row">
@@ -138,6 +109,9 @@ export default function LetterPage() {
                   <p className="signature">A. Counselor</p>
                   <p className="tiny muted" style={{ margin: 0 }}>
                     Dean of Guidance &amp; Placement · {UNIVERSITY_NAME}
+                  </p>
+                  <p className="tiny" style={{ margin: "0.6rem 0 0", color: "var(--stamp-red)", fontFamily: "var(--sans)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                    {MOTTO}
                   </p>
                 </div>
                 <div className="seal">
@@ -157,23 +131,19 @@ export default function LetterPage() {
               style={{ marginTop: "1.6rem", borderTop: "1px solid var(--line)", paddingTop: "0.8rem" }}
             >
               Filed under: {type.name} · Major in {major.name} · Minor in{" "}
-              {minor.name}. This letter is a Phase-One prototype; final
-              stationery and signatures pending.
+              {minor.name}.
+              {person.source === "template"
+                ? " (Draft letter — live AI personalization enables when a counselor key is configured.)"
+                : ""}
             </p>
           </div>
         </article>
 
         <p className="footer no-print">
-          <Link href="/">Office lobby</Link> ·{" "}
-          <Link href="/result">Placement</Link>
+          <Link href="/">Office lobby</Link> · <Link href="/result">Placement</Link> ·{" "}
+          <Link href="/file">Full student file</Link>
         </p>
       </div>
     </main>
   );
-}
-
-/** Turn "Day 1 — Clear one square foot…" into a clean inline clause. */
-function stripDay(line: string): string {
-  const cleaned = line.replace(/^Day\s*\d+\s*—\s*/i, "").trim();
-  return cleaned.charAt(0).toLowerCase() + cleaned.slice(1);
 }

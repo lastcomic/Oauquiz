@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Crest from "@/components/Crest";
-import { CORE_LINE } from "@/data/letterTemplates";
+import { CORE_LINE } from "@/data/brand";
 import { QUESTIONS } from "@/data/questions";
 
 export default function LandingPage() {

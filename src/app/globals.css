@@ -713,3 +713,179 @@ details.record summary {
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }
+
+/* ── Six-document report blocks ────────────────────────────── */
+
+.doc-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+
+.doc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(201, 169, 97, 0.12);
+}
+
+.doc-num {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  color: var(--navy);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: grid;
+  place-items: center;
+}
+
+.doc-body {
+  padding: 0.9rem 1rem;
+}
+
+.doc-body p {
+  font-size: 0.98rem;
+}
+
+.doc-body p:last-child {
+  margin-bottom: 0;
+}
+
+.prompt-box {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  background: var(--navy);
+  color: var(--cream);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  margin: 0.5rem 0;
+  max-height: 18rem;
+  overflow: auto;
+}
+
+/* ── Printable student file ────────────────────────────────── */
+
+.file-section {
+  margin-bottom: 1.6rem;
+}
+
+.file-section h3 {
+  font-size: 1.05rem;
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.schedule-table th,
+.schedule-table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.schedule-table th {
+  font-family: var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  color: var(--stamp-red);
+}
+
+.transcript-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px dotted var(--line);
+  font-size: 0.92rem;
+}
+
+.page-break {
+  break-before: page;
+}
+
+@media print {
+  .doc-head {
+    background: #f0f0f0 !important;
+  }
+  .prompt-box {
+    background: #f4f4f4 !important;
+    color: #111 !important;
+    border: 1px solid #ccc;
+    max-height: none;
+  }
+}
+
+/* ── Admin dashboard ───────────────────────────────────────── */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+}
+
+@media (min-width: 560px) {
+  .edit-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.edit-field span {
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--stamp-red);
+  font-weight: 700;
+}
+
+.edit-field select {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  padding: 0.55rem 0.6rem;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+.edit-field select:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  border-color: var(--navy);
+}

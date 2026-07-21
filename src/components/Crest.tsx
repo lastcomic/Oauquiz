@@ -1,4 +1,4 @@
-import { UNIVERSITY_NAME } from "@/data/letterTemplates";
+import { UNIVERSITY_NAME } from "@/data/brand";
 
 /** The OAU masthead crest. Serif, gold ring, quiet. */
 export default function Crest({ subtitle }: { subtitle?: string }) {

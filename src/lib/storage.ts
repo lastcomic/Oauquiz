@@ -1,9 +1,10 @@
-import type { Submission } from "@/lib/types";
+import type { Personalization, Submission } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────
 // localStorage persistence. No backend.
-//   CURRENT_KEY — the most recent submission (drives /result & /letter)
+//   CURRENT_KEY — most recent submission (drives /result, /letter, /file)
 //   ALL_KEY     — array of every submission (drives /admin)
+// Admin edits and cached AI personalization are written back here.
 // ─────────────────────────────────────────────────────────────
 
 const CURRENT_KEY = "oau:current-submission";
@@ -43,6 +44,36 @@ export function getAllSubmissions(): Submission[] {
   return safeParse<Submission[]>(window.localStorage.getItem(ALL_KEY), []);
 }
 
+export function getSubmissionById(id: string): Submission | null {
+  return getAllSubmissions().find((s) => s.id === id) ?? null;
+}
+
+/** Patch a submission (by id) in both the current slot and the list. */
+export function updateSubmission(
+  id: string,
+  patch: Partial<Submission>,
+): Submission | null {
+  if (!isBrowser()) return null;
+  const all = getAllSubmissions();
+  let updated: Submission | null = null;
+  const next = all.map((s) => {
+    if (s.id !== id) return s;
+    updated = { ...s, ...patch };
+    return updated;
+  });
+  window.localStorage.setItem(ALL_KEY, JSON.stringify(next));
+
+  const cur = getCurrentSubmission();
+  if (cur && cur.id === id && updated) {
+    window.localStorage.setItem(CURRENT_KEY, JSON.stringify(updated));
+  }
+  return updated;
+}
+
+export function setPersonalization(id: string, p: Personalization): void {
+  updateSubmission(id, { personalization: p });
+}
+
 export function clearCurrentSubmission(): void {
   if (!isBrowser()) return;
   window.localStorage.removeItem(CURRENT_KEY);
@@ -54,7 +85,6 @@ export function clearAllSubmissions(): void {
   window.localStorage.removeItem(CURRENT_KEY);
 }
 
-/** Generate a reasonably unique id without external deps. */
 export function makeId(): string {
   const rand = Math.floor(Math.random() * 1e9).toString(36);
   return `sub_${Date.now().toString(36)}_${rand}`;
