@@ -405,15 +405,19 @@ function PurchaseCard({
   person: Personalization | null;
 }) {
   const [cfg, setCfg] = useState<{
+    leadMode: boolean;
+    charging: boolean;
     stripeEnabled: boolean;
     emailEnabled: boolean;
+    beehiivEnabled: boolean;
     priceLabel: string;
     productName: string;
   } | null>(null);
   const [email, setEmail] = useState(sub.order?.email ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const delivered = !!sub.order?.deliveredAt;
+  const [done, setDone] = useState<boolean>(!!sub.order?.deliveredAt);
+  const leadMode = cfg ? !cfg.charging : true;
 
   useEffect(() => {
     fetch("/api/config")
@@ -422,22 +426,60 @@ function PurchaseCard({
       .catch(() => setCfg(null));
   }, []);
 
-  async function buy() {
+  function validate(): boolean {
     setErr(null);
     if (!/.+@.+\..+/.test(email)) {
       setErr("Please enter a valid email address.");
-      return;
+      return false;
     }
     if (!person) {
       setErr("Your report is still being written — one moment.");
-      return;
+      return false;
     }
+    return true;
+  }
+
+  // Lead-management mode (free): capture the lead and email the file inline.
+  async function captureLead() {
+    if (!validate() || !person) return;
     setBusy(true);
     try {
       const context = buildContext(sub);
-      updateSubmission(sub.id, {
-        order: { ...(sub.order ?? {}), email },
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, context, personalization: person, submissionId: sub.id }),
       });
+      const data = await res.json();
+      if (!res.ok || !data.captured) {
+        setErr(data.error || "Could not send your file. Please try again.");
+        setBusy(false);
+        return;
+      }
+      updateSubmission(sub.id, {
+        order: {
+          ...(sub.order ?? {}),
+          email,
+          purchased: true,
+          deliveredAt: new Date().toISOString(),
+          channel: "simulated",
+        },
+      });
+      setDone(true);
+    } catch {
+      setErr("Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Charging mode: Stripe Checkout.
+  async function buy() {
+    if (!validate() || !person) return;
+    setBusy(true);
+    try {
+      const context = buildContext(sub);
+      updateSubmission(sub.id, { order: { ...(sub.order ?? {}), email } });
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -456,19 +498,18 @@ function PurchaseCard({
     }
   }
 
-  if (delivered) {
+  if (done) {
     return (
       <div className="paper mt-3" style={{ borderLeft: "3px solid var(--gold)" }}>
-        <span className="overline">Official Student File</span>
-        <h3 style={{ margin: "0.4rem 0 0.2rem" }}>Delivered ✓</h3>
+        <span className="overline">Your Student File</span>
+        <h3 style={{ margin: "0.4rem 0 0.2rem" }}>On its way ✓</h3>
         <p className="muted" style={{ marginBottom: 0 }}>
-          Your official Student File was emailed to{" "}
-          <strong>{sub.order?.email}</strong>
+          We&apos;ve sent your official Student File to{" "}
+          <strong>{email || sub.order?.email}</strong>
           {sub.order?.channel === "simulated"
-            ? " (simulated — configure email to send for real)."
+            ? " (email provider not yet configured, so this send is simulated)."
             : "."}{" "}
-          Check your inbox for the PDF, your advisor prompt, and the Dean&apos;s
-          message.
+          Look for the PDF, your advisor prompt, and a welcome from the Dean.
         </p>
       </div>
     );
@@ -476,10 +517,13 @@ function PurchaseCard({
 
   return (
     <div className="paper mt-3" style={{ borderLeft: "3px solid var(--stamp-red)" }}>
-      <span className="overline">Get Your Official Student File</span>
+      <span className="overline">
+        {leadMode ? "Get Your Official Student File" : "Buy Your Official Student File"}
+      </span>
       <h3 style={{ margin: "0.4rem 0 0.3rem" }}>
-        {cfg?.productName ?? "OAU Official Student File"}
-        {cfg ? ` — ${cfg.priceLabel}` : ""}
+        {leadMode
+          ? "Emailed to you — free"
+          : `${cfg?.productName ?? "OAU Official Student File"}${cfg ? ` — ${cfg.priceLabel}` : ""}`}
       </h3>
       <p className="muted field-note">
         We&apos;ll email you a professionally typeset PDF of your complete file —
@@ -495,21 +539,26 @@ function PurchaseCard({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <button className="btn btn-gold" type="button" onClick={buy} disabled={busy}>
+        <button
+          className="btn btn-gold"
+          type="button"
+          onClick={leadMode ? captureLead : buy}
+          disabled={busy}
+        >
           {busy
-            ? "Starting…"
-            : cfg?.stripeEnabled
-              ? `Buy & Email — ${cfg.priceLabel}`
-              : "Get my file (test mode)"}
+            ? "Sending…"
+            : leadMode
+              ? "Email me my file"
+              : `Buy & Email — ${cfg?.priceLabel ?? ""}`}
         </button>
       </div>
       {err ? <p className="error-text">{err}</p> : null}
       <p className="tiny muted mt-2">
-        {cfg?.stripeEnabled
-          ? "Secure checkout via Stripe."
-          : "Payments not yet configured — this runs the delivery flow in test mode."}
+        {leadMode
+          ? "Free. We’ll email your file and occasional notes from the Office of Guidance. Unsubscribe anytime."
+          : "Secure checkout via Stripe."}
         {cfg && !cfg.emailEnabled
-          ? " Email provider not configured, so delivery is simulated."
+          ? " (Email provider not configured yet, so delivery is simulated.)"
           : ""}
       </p>
     </div>

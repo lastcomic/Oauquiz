@@ -70,3 +70,37 @@ export async function saveOrder(order: Order): Promise<void> {
 export async function getOrder(sessionId: string): Promise<Order | null> {
   return kvGet<Order>(orderKey(sessionId));
 }
+
+// ── Leads (lead-management mode) ───────────────────────────────
+
+export interface Lead {
+  id: string;
+  createdAt: string;
+  email: string;
+  name: string;
+  age: string | null;
+  studentType: string;
+  major: string;
+  minor: string;
+  topCategories: string[];
+  someday: string | null;
+  note: string | null;
+  delivered: boolean;
+  beehiiv?: "subscribed" | "simulated" | "error" | "off";
+}
+
+const LEADS_KEY = "oau:leads";
+
+/** Prepend a lead, de-duplicating by email (latest wins). Cap at 1000. */
+export async function saveLead(lead: Lead): Promise<void> {
+  const all = (await kvGet<Lead[]>(LEADS_KEY)) ?? [];
+  const deduped = all.filter(
+    (l) => l.email.toLowerCase() !== lead.email.toLowerCase(),
+  );
+  deduped.unshift(lead);
+  await kvSet(LEADS_KEY, deduped.slice(0, 1000));
+}
+
+export async function getLeads(): Promise<Lead[]> {
+  return (await kvGet<Lead[]>(LEADS_KEY)) ?? [];
+}

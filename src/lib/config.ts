@@ -22,6 +22,20 @@ export const config = {
   kvToken:
     process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "",
 
+  // Lead-management mode: when true (default), the app is FREE and the email
+  // capture collects leads instead of charging. Set LEAD_MODE=false to charge.
+  leadMode: process.env.LEAD_MODE !== "false",
+
+  // Beehiiv (auto-subscribe leads to the newsletter)
+  beehiivKey: process.env.BEEHIIV_API_KEY || "",
+  beehiivPublicationId: process.env.BEEHIIV_PUBLICATION_ID || "",
+
+  // Notify this address on each new lead (optional)
+  leadNotifyEmail: process.env.LEAD_NOTIFY_EMAIL || "",
+
+  // Optional bearer token protecting the leads export endpoint
+  adminToken: process.env.ADMIN_TOKEN || "",
+
   // Public base URL (for Stripe redirect URLs). Falls back to request origin.
   baseUrl: process.env.NEXT_PUBLIC_BASE_URL || "",
 } as const;
@@ -29,6 +43,10 @@ export const config = {
 export const stripeEnabled = () => !!config.stripeSecret;
 export const emailEnabled = () => !!config.resendKey;
 export const kvEnabled = () => !!config.kvUrl && !!config.kvToken;
+export const beehiivEnabled = () =>
+  !!config.beehiivKey && !!config.beehiivPublicationId;
+/** Charge only when explicitly out of lead mode AND Stripe is configured. */
+export const chargingEnabled = () => !config.leadMode && !!config.stripeSecret;
 
 /** Formatted price, e.g. "$29.00". */
 export function priceLabel(): string {

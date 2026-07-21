@@ -111,11 +111,14 @@ export default function AdminPage() {
             ) : null}
           </div>
           <p className="tiny muted mt-2">
-            Records, edits, and regenerated letters are stored in this browser&apos;s
-            <code> localStorage</code> — this dashboard is per-device (a shared
-            database arrives with Phase 2B).
+            Local records, edits, and regenerated letters live in this
+            browser&apos;s <code>localStorage</code>. Captured{" "}
+            <strong>leads</strong> (below) are collected server-side and shared
+            across devices when a datastore is configured.
           </p>
         </div>
+
+        <LeadsPanel />
 
         {!loaded ? (
           <p className="muted mt-3">Opening the filing cabinet…</p>
@@ -158,6 +161,136 @@ export default function AdminPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+interface LeadRow {
+  id: string;
+  createdAt: string;
+  email: string;
+  name: string;
+  studentType: string;
+  major: string;
+  minor: string;
+  topCategories: string[];
+  delivered: boolean;
+  beehiiv?: string;
+}
+
+function LeadsPanel() {
+  const [leads, setLeads] = useState<LeadRow[] | null>(null);
+  const [kvConfigured, setKvConfigured] = useState(false);
+  const [needsToken, setNeedsToken] = useState(false);
+  const [token, setToken] = useState("");
+
+  function load(tok?: string) {
+    const q = tok ? `?token=${encodeURIComponent(tok)}` : "";
+    fetch(`/api/leads${q}`)
+      .then((r) => {
+        if (r.status === 401) {
+          setNeedsToken(true);
+          return null;
+        }
+        return r.json();
+      })
+      .then((d) => {
+        if (!d) return;
+        setNeedsToken(false);
+        setLeads(d.leads ?? []);
+        setKvConfigured(!!d.kvConfigured);
+      })
+      .catch(() => setLeads([]));
+  }
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem("oau:admin-token") : "";
+    if (saved) setToken(saved);
+    load(saved || undefined);
+  }, []);
+
+  return (
+    <div className="paper mt-3">
+      <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <span className="overline">Leads · Server-side</span>
+          <h2 style={{ margin: "0.3rem 0 0", fontSize: "1.4rem" }}>
+            {leads ? leads.length : "—"} captured
+          </h2>
+        </div>
+        {leads && leads.length > 0 ? (
+          <a
+            className="btn btn-ghost"
+            href={`/api/leads?format=csv${token ? `&token=${encodeURIComponent(token)}` : ""}`}
+          >
+            Export leads CSV
+          </a>
+        ) : null}
+      </div>
+
+      {needsToken ? (
+        <div className="buy-row mt-2">
+          <input
+            className="field"
+            type="password"
+            placeholder="Admin token"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          <button
+            className="btn"
+            type="button"
+            onClick={() => {
+              window.localStorage.setItem("oau:admin-token", token);
+              load(token);
+            }}
+          >
+            Unlock
+          </button>
+        </div>
+      ) : leads === null ? (
+        <p className="muted mt-2">Loading leads…</p>
+      ) : leads.length === 0 ? (
+        <p className="tiny muted mt-2">
+          No leads captured yet.{" "}
+          {kvConfigured
+            ? "New quiz-takers who request their file will appear here."
+            : "Configure a datastore (KV_REST_API_URL/TOKEN) to persist leads across devices and serverless instances."}
+        </p>
+      ) : (
+        <div className="table-scroll mt-2">
+          <table className="records">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Type</th>
+                <th>Major</th>
+                <th>List</th>
+                <th>Captured</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((l) => (
+                <tr key={l.id + l.createdAt}>
+                  <td>{l.name}</td>
+                  <td>{l.email}</td>
+                  <td>{l.studentType}</td>
+                  <td>{l.major}</td>
+                  <td className="tiny">{l.beehiiv ?? "—"}</td>
+                  <td className="tiny">{new Date(l.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {!kvConfigured && leads && leads.length > 0 ? (
+        <p className="tiny muted mt-2">
+          Showing leads from this serverless instance only — add a KV datastore
+          to make this list durable and shared.
+        </p>
+      ) : null}
+    </div>
   );
 }
 

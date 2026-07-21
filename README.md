@@ -92,7 +92,11 @@ activates the real integrations — no code changes.
 | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | Live AI-written letters | Falls back to hand-written templates when absent. |
 | `AI_MODEL` | Override AI model | Default `claude-sonnet-5`. |
-| `STRIPE_SECRET_KEY` | Real Stripe Checkout | Absent → simulation ("test mode") checkout. |
+| `LEAD_MODE` | **Free lead-capture vs. charging** | Default **free** (lead mode). Set `LEAD_MODE=false` (with a Stripe key) to charge. |
+| `BEEHIIV_API_KEY` / `BEEHIIV_PUBLICATION_ID` | Auto-subscribe leads to your Beehiiv list | Placement is attached as custom fields (`student_type`, `major`, `minor`). |
+| `LEAD_NOTIFY_EMAIL` | Email you on each new lead | Uses the Resend key. |
+| `ADMIN_TOKEN` | Protect the `/api/leads` export | When set, the admin Leads panel asks for it. Open in dev when unset. |
+| `STRIPE_SECRET_KEY` | Real Stripe Checkout (only if `LEAD_MODE=false`) | Absent → simulation ("test mode") checkout. |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook fulfillment | For `/api/stripe/webhook`. |
 | `STRIPE_PRICE_ID` | Fixed Stripe price | Otherwise uses `PRICE_AMOUNT_CENTS`. |
 | `PRICE_AMOUNT_CENTS` / `PRICE_CURRENCY` / `PRODUCT_NAME` | Inline price | Defaults `2900` / `usd` / "OAU Official Student File". |
