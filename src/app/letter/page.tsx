@@ -10,6 +10,7 @@ import { STUDENT_TYPE_BY_ID } from "@/data/studentTypes";
 import { MAJOR_BY_ID } from "@/data/majors";
 import { MINOR_BY_ID } from "@/data/minors";
 import { UNIVERSITY_NAME, OFFICE_NAME, MOTTO } from "@/data/brand";
+import { COUNSELOR } from "@/lib/personalize";
 
 export default function LetterPage() {
   const [sub, setSub] = useState<Submission | null>(null);
@@ -105,10 +106,9 @@ export default function LetterPage() {
             <div className="letter-sign">
               <div className="sign-row">
                 <div>
-                  <p style={{ margin: 0 }}>With genuine regard,</p>
-                  <p className="signature">A. Counselor</p>
+                  <p className="signature">{COUNSELOR.name}</p>
                   <p className="tiny muted" style={{ margin: 0 }}>
-                    Dean of Guidance &amp; Placement · {UNIVERSITY_NAME}
+                    {COUNSELOR.title}
                   </p>
                   <p className="tiny" style={{ margin: "0.6rem 0 0", color: "var(--stamp-red)", fontFamily: "var(--sans)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     {MOTTO}

@@ -21,6 +21,13 @@ import { extractName, extractAge } from "@/lib/scoring";
 export const OAU_MOTTO = "Not over. Complete.";
 export const OAU_SIGNOFF = "Office of Guidance and Placement · Old Age University";
 
+/** The Guidance Counselor persona who signs the letter. */
+export const COUNSELOR = {
+  name: "Dr. Gerald Fitch",
+  title: "Guidance Counselor · Old Age University, Class of 1987",
+  signoff: "Stay Gold.",
+};
+
 export interface PersonalizeContext {
   name: string;
   age: string | null;
@@ -114,15 +121,13 @@ export function buildContext(sub: Submission): PersonalizeContext {
 
 // ── AI PROMPT ──────────────────────────────────────────────────
 
-export const SYSTEM_PROMPT = `You are the official Guidance Counselor for Old Age University (OAU), an institution for adults roughly 45–65 revisiting the question "what do you want to be when you grow up" now that they finally have the information to answer it.
+export const SYSTEM_PROMPT = `You are Dr. Gerald Fitch, Guidance Counselor at Old Age University (OAU). Class of 1987. Retired. You came back because you got bored. OAU is for adults roughly 45 to 65 revisiting the question "what do you want to be when you grow up" now that they finally have the information to answer it.
 
-The quiz engine has ALREADY determined this student's student type, major, minor, required course, electives, audio lesson, and first assignment. Your job is NOT to change any of those decisions and NOT to invent new courses, majors, numbers, statistics, or credentials. Your only job is to EXPLAIN the existing decisions so the student feels genuinely understood.
+The quiz engine has ALREADY chosen this student's student type, major, minor, required course, electives, audio lesson, and first assignment. You do NOT change those decisions. You do NOT invent new courses, majors, course numbers, statistics, or credentials. You explain and you write, in your voice.
 
-Connect the dots between the specific answers they gave and the recommendations they received. Reference at least three specific details from their answers. Do not flatter, exaggerate, or tell them they are "special" — simply connect the dots so they think "that actually sounds like me."
+Your voice: deadpan, warm, seen-it-all. You have read their file. Short sentences. Observed, never clinical. No self-help language. No coaching speak. No motivational-speaker lines. No em dashes, ever. You treat their real-life situation like standard freshman intake paperwork: normal, filed, handled. Humor is dry and comes from official university language applied to real midlife situations, never from jokes about getting old, bad knees, technology, memory, retirement, or any age stereotype.
 
-Tone: calm, warm, observant, occasionally and subtly funny, never preachy, never cheesy, never motivational-speaker language. Humor comes from official university language applied to real midlife situations — never from jokes about getting old, bad knees, technology, memory, retirement, or any age stereotype.
-
-Never diagnose, never claim certainty, never tell anyone to quit their job or make a drastic change. Use hedged phrasing: "Your answers suggest…", "It appears…", "The Guidance Office noticed…", "You may be…". Recommend small experiments, not leaps.
+Never diagnose. Never claim certainty. Never tell anyone to quit their job or make a drastic change. When you point them anywhere, point them toward one small thing.
 
 Return ONLY valid JSON (no markdown fences, no commentary) matching the requested schema exactly.`;
 
@@ -135,10 +140,16 @@ export function buildUserPrompt(ctx: PersonalizeContext): string {
     .map((e) => `${e.courseNumber} ${e.title} — ${e.description}`)
     .join("\n");
 
+  const situation =
+    [ctx.someday ? `Someday: ${ctx.someday}` : "", ctx.note ? `In their words: ${ctx.note}` : ""]
+      .filter(Boolean)
+      .join(" | ") || "(not stated — work from their answers and scores)";
+
   return `STUDENT FILE (all decisions already made by the engine — explain, do not change):
 
 Name: ${ctx.name}
 Age: ${ctx.age ?? "not provided"}
+Situation (the one-line reason they walked in): ${situation}
 Student Type: ${ctx.studentType.name} — ${ctx.studentType.tagline}
 Recommended Major: ${ctx.major.name}
 Recommended Minor: ${ctx.minor.name}
@@ -168,8 +179,14 @@ Produce SIX personalized documents as a single JSON object with EXACTLY these ke
 
 Rules:
 - "whyTheseCourses.electives" MUST contain one entry per elective using these exact ids in order: ${ctx.electives.map((e) => `"${e.id}"`).join(", ")}.
-- The guidance letter should read ~250–400 words across its four parts, reference at least three specific answers, and end warmly. Do not restate the motto in the letter body.
-- "deansMessage" is a short spoken video script (~120 words) from the Dean, warm and brief.
+- "guidanceLetter" is a letter from Dr. Gerald Fitch to the student, second person, ~200 to 320 words across its four parts. Follow this exact structure in Fitch's voice:
+    * opening: begins with the sentence "I have been doing this a long time. I know a file when I see one." Then one short beat.
+    * assessment: reference the specific details from their situation and answers, reworded as notes in their student file. Reframe each struggle as normal freshman behavior, not a crisis. Include one line that lands emotionally and makes them feel seen, not mocked.
+    * recommendation: point them to TWO of the courses already assigned below, by name (the required course and/or an elective). Do not invent courses. This is where you start them.
+    * closing: land one line and stop. End with exactly "Stay Gold."
+  No em dashes anywhere in the letter. Short sentences. If any sentence sounds like a greeting card, rewrite it. Do not restate the university motto in the letter.
+- Keep "whyTheseCourses", "secondDraftSummary", and "sevenDayIntro" in the same dry, plain OAU voice (they are office paperwork, not Fitch's signed letter).
+- "deansMessage" is a short spoken video script (~120 words) from the Dean (a different person than Fitch), warm and brief.
 - "advisorPrompt" is a ready-to-paste prompt the student can give ChatGPT/Claude/Gemini: it must include their student type, major, minor, required course, three electives, first assignment, stated goals and limitations, and ask the AI to propose ONE small experiment at a time. It must instruct that AI never to invent OAU courses.
 - Keep everything in the OAU voice described in your instructions.`;
 }
@@ -239,11 +256,11 @@ export function buildFallback(ctx: PersonalizeContext): Personalization {
   return {
     source: "template",
     guidanceLetter: {
-      subjectLine: `Placement Confirmed — ${ctx.studentType.name}`,
-      opening: `Dear ${ctx.name}, following your recent examination, this Office is pleased to confirm your placement as a ${ctx.studentType.name}. The designation is not a diagnosis. It is a recognition — of something your answers suggest you have known for a while.`,
-      assessment: `Reading your file together${specific ? `, ${specific}` : ""}. Taken as a whole, your answers lean most clearly toward ${top}${second ? `, with ${second} close behind` : ""}. That is not a small thing to notice about yourself, and it is the thread we followed to your placement.`,
-      recommendation: `We have placed you in a major of ${ctx.major.name}, a minor in ${ctx.minor.name}, and enrolled you in ${ctx.requiredCourse.courseNumber} ${ctx.requiredCourse.title}. Your three electives — ${el.map((e) => e.title).join(", ")} — are chosen to match what you want, use what you already know, and open one new door at a manageable size.`,
-      closing: `Begin with the seven-day assignment. It is small on purpose. You are not starting over; you are starting from the most informed position of your life.`,
+      subjectLine: `Intake reviewed. ${ctx.studentType.name}.`,
+      opening: `I have been doing this a long time. I know a file when I see one. Yours came across my desk this morning, ${first}.`,
+      assessment: `${specific ? `The file notes a few things. ${specific.charAt(0).toUpperCase()}${specific.slice(1)}. ` : ""}Your answers lean toward ${top}${second ? `, with ${second} right behind it` : ""}. People treat that like a problem to solve. It is not. It is standard freshman behavior. I have a drawer full of files that say the same thing. You are not behind. You are enrolled.`,
+      recommendation: `I am starting you in two places. ${ctx.requiredCourse.courseNumber} ${ctx.requiredCourse.title}, because that is where your file points. And ${el[0]?.title ?? "your first elective"}, because it uses something you already have. Your major is ${ctx.major.name}. Your minor is ${ctx.minor.name}. That is the paperwork. The rest is showing up.`,
+      closing: `Do the seven day assignment. It is small. That is the point. Stay Gold.`,
     },
     whyTheseCourses: {
       intro: `Every recommendation below was chosen by matching your answers to the OAU catalog. Here is the reasoning, in plain terms.`,

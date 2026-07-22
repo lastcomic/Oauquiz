@@ -8,6 +8,7 @@ import {
 import type { PersonalizeContext } from "@/lib/personalize";
 import type { Personalization } from "@/lib/types";
 import { MOTTO } from "@/data/brand";
+import { COUNSELOR } from "@/lib/personalize";
 
 // Server-side generation of the official Student File PDF. Pure JS
 // (pdf-lib) — no headless browser, no external PDF service.
@@ -256,7 +257,8 @@ export async function generateStudentFilePdf(
   L.gap(6);
   L.text("Certified by the Office of Guidance & Placement,", { size: 10 });
   L.gap(2);
-  L.text("A. Counselor", { font: fonts.italic, size: 15, color: NAVY });
+  L.text(COUNSELOR.name, { font: fonts.italic, size: 15, color: NAVY });
+  L.text(COUNSELOR.title, { size: 9, color: MUTED });
   L.gap(2);
   L.text(MOTTO.toUpperCase(), { font: fonts.bold, size: 9, color: RED });
 
