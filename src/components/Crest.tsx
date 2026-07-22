@@ -1,12 +1,13 @@
 import { UNIVERSITY_NAME } from "@/data/brand";
+import OauSeal from "@/components/OauSeal";
 
-/** The OAU masthead crest. Serif, gold ring, quiet. */
+/** The OAU masthead crest — real seal + registrar chrome. */
 export default function Crest({ subtitle }: { subtitle?: string }) {
   return (
     <div className="center">
       <div className="crest">
-        <span className="crest-mark">OAU</span>
-        <span className="est">Est. — Later Than You'd Think</span>
+        <OauSeal size={84} />
+        <span className="est">Est. 2026 · The Youngest of the Old People</span>
       </div>
       <div className="mt-2">
         <span className="overline">{UNIVERSITY_NAME}</span>

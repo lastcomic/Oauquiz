@@ -14,6 +14,7 @@ import { AUDIO_BY_ID } from "@/data/audioLessons";
 import { ASSIGNMENT_BY_ID } from "@/data/assignments";
 import { CATEGORY_BY_ID } from "@/data/categories";
 import { UNIVERSITY_NAME, OFFICE_NAME, MOTTO } from "@/data/brand";
+import OauSeal from "@/components/OauSeal";
 
 export default function FilePage() {
   const [sub, setSub] = useState<Submission | null>(null);
@@ -80,8 +81,8 @@ export default function FilePage() {
         <article className="letter-sheet">
           {/* Letterhead */}
           <header className="letter-head">
-            <div className="crest-mark" style={{ margin: "0 auto 0.6rem" }}>
-              OAU
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.6rem" }}>
+              <OauSeal size={60} />
             </div>
             <h2 style={{ marginBottom: "0.15rem" }}>{UNIVERSITY_NAME}</h2>
             <p className="overline" style={{ display: "block" }}>

@@ -11,6 +11,7 @@ import { MAJOR_BY_ID } from "@/data/majors";
 import { MINOR_BY_ID } from "@/data/minors";
 import { UNIVERSITY_NAME, OFFICE_NAME, MOTTO } from "@/data/brand";
 import { COUNSELOR } from "@/lib/personalize";
+import OauSeal from "@/components/OauSeal";
 
 export default function LetterPage() {
   const [sub, setSub] = useState<Submission | null>(null);
@@ -76,8 +77,8 @@ export default function LetterPage() {
 
         <article className="letter-sheet">
           <header className="letter-head">
-            <div className="crest-mark" style={{ margin: "0 auto 0.6rem" }}>
-              OAU
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.6rem" }}>
+              <OauSeal size={64} />
             </div>
             <h2 style={{ marginBottom: "0.15rem", letterSpacing: "0.02em" }}>
               {UNIVERSITY_NAME}

@@ -23,9 +23,13 @@
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
 
+  --navy-deep: #12203c;
+  --navy-ink: #0d1832;
+
   --maxw: 44rem;
   --radius: 3px;
-  --shadow: 0 1px 2px rgba(27, 42, 71, 0.08), 0 8px 28px rgba(27, 42, 71, 0.1);
+  --shadow: 0 1px 2px rgba(27, 42, 71, 0.1), 0 10px 30px rgba(13, 24, 50, 0.16);
+  --shadow-lg: 0 2px 4px rgba(13, 24, 50, 0.14), 0 24px 60px rgba(13, 24, 50, 0.28);
 }
 
 * {
@@ -121,11 +125,8 @@ p {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.9rem 1.4rem;
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: rgba(242, 234, 216, 0.6);
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
 }
 
 .crest-mark {
@@ -156,8 +157,112 @@ p {
   background: var(--cream-paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   padding: 1.5rem 1.35rem;
+}
+
+/* ── Deep-navy hero (book-cover treatment) ─────────────────── */
+
+.hero {
+  position: relative;
+  border-radius: var(--radius);
+  padding: 2rem 1.4rem 2.2rem;
+  text-align: center;
+  color: var(--cream);
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--navy-soft) 0%, var(--navy) 45%, var(--navy-deep) 100%);
+  border: 1px solid var(--navy-ink);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.hero::before {
+  /* fine gold hairline frame, inset like a book cover */
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(201, 169, 97, 0.45);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.hero::after {
+  /* subtle paper grain */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .hero {
+    padding: 2.75rem 2.5rem 3rem;
+  }
+}
+
+.hero .overline {
+  color: var(--gold);
+}
+
+.hero h1 {
+  color: var(--cream);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.hero .muted {
+  color: rgba(232, 220, 196, 0.72);
+}
+
+.hero-title {
+  font-family: var(--sans);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  font-size: clamp(2.1rem, 8vw, 3.4rem);
+  margin: 0.4rem 0 0.2rem;
+  color: var(--cream);
+}
+
+.hero-title .gold {
+  color: var(--gold);
+}
+
+.hero-rule {
+  width: 68px;
+  height: 2px;
+  background: var(--gold);
+  border: 0;
+  margin: 1rem auto;
+  opacity: 0.8;
+}
+
+.hero-quote {
+  font-size: clamp(1.15rem, 4.5vw, 1.5rem);
+  font-style: italic;
+  color: var(--cream);
+  margin: 1rem 0 0.6rem;
+}
+
+.hero .btn-gold {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.motto-tag {
+  display: inline-block;
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 97, 0.5);
+  border-radius: 99px;
+  padding: 0.35rem 0.9rem;
+  margin-top: 1.2rem;
 }
 
 @media (min-width: 640px) {
