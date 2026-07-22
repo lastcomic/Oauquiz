@@ -265,6 +265,31 @@ p {
   margin-top: 1.2rem;
 }
 
+/* ── Companion book + brand strip ──────────────────────────── */
+
+.book-row {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.book-row > div {
+  flex: 1 1 14rem;
+}
+
+.brand-strip {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.brand-strip:empty {
+  display: none;
+}
+
 @media (min-width: 640px) {
   .paper {
     padding: 2.25rem 2.5rem;
